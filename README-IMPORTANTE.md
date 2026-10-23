@@ -1,24 +1,27 @@
 # Estado de deploy — video-automatico-youtube
 
-## Bloqueio encontrado
+## Correções aplicadas
 
-A branch `main` contém somente arquivos de configuração e `automate-clipping-main-configured.zip`. As pastas `backend/` e `web/` não estão na raiz do repositório. Portanto, o `docker-compose.yml` referencia `backend/Dockerfile`, mas esse caminho não existe e o build não inicia.
+- Criado um `Dockerfile` na raiz do repositório.
+- Atualizado o `docker-compose.yml` para construir as imagens usando o Dockerfile raiz.
+- O build extrai `automate-clipping-main-configured.zip` durante a construção e compila o frontend/backend sem exigir extração manual no GitHub.
 
-## Correção necessária
+A raiz ainda mantém o código da aplicação dentro do ZIP; `backend/` e `web/` não estão versionados individualmente. Por isso, a construção precisa ser testada em Docker real antes de considerar o deploy validado.
 
-Extraia o conteúdo do ZIP para a raiz do repositório de forma que a estrutura fique assim:
+## Autopilot 24/7
 
-- `backend/Dockerfile`
-- `backend/app/`
-- `backend/requirements.txt`
-- `web/package.json`
-- `web/src/`
-- `docker-compose.yml`
+O `.env.example` mantém `EDGETAPE_AUTOPILOT_ENABLED=0` por segurança. Antes de ativar, configure `EDGETAPE_YOUTUBE_API_KEY`, `EDGETAPE_AUTOPILOT_OWNER_ID`, um JWT forte, banco de dados protegido e OAuth das redes sociais. A rotina busca fontes Creative Commons confirmadas pela API oficial, mas ainda é necessário verificar os direitos de reutilização para o uso pretendido, inclusive áudio/imagem de terceiros. Plataformas podem exigir revisão dos aplicativos e impor limites de publicação.
 
-Não mantenha só o arquivo ZIP. Preserve os arquivos de configuração existentes e não envie `.env` nem credenciais.
+## Como validar
 
-## Autopilot
+Na máquina de deploy, criar um `.env` com segredos reais (não versionar esse arquivo) e executar:
 
-O `.env.example` mantém `EDGETAPE_AUTOPILOT_ENABLED=0` por segurança. Antes de ativar, configure `EDGETAPE_YOUTUBE_API_KEY`, `EDGETAPE_AUTOPILOT_OWNER_ID`, JWT forte, DB protegido e OAuth das redes sociais. A rotina só deve processar fontes com licença Creative Commons confirmada pela API oficial; essa licença ainda precisa ser validada para o uso planejado, inclusive direitos de imagem/áudio de terceiros. As plataformas podem exigir revisão/aprovação de apps e impor limites.
+```bash
+docker compose config
+docker compose build
+docker compose up -d
+docker compose ps
+docker compose logs --tail=100 api worker autopilot
+```
 
-Não é possível considerar o deploy pronto enquanto as pastas do app não estiverem no repositório e não forem realizados build/testes no servidor.
+Manter `EDGETAPE_AUTOPILOT_ENABLED=0` até a API, banco, worker, contas OAuth e configuração da fonte terem sido verificados. A configuração de autopilot deve ser habilitada somente depois dos testes e confirmações necessários.
