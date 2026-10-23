@@ -30,7 +30,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: edgetape-api
     env_file: .env
     environment:
@@ -52,7 +52,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: edgetape-worker
     command: ["/entrypoint.sh"]
     env_file: .env
@@ -73,7 +73,7 @@ services:
   autopilot:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     container_name: edgetape-autopilot
     command: ["python", "-m", "app.autopilot"]
     env_file: .env
