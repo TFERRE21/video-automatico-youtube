@@ -1,0 +1,95 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: edgetape-db
+    environment:
+      POSTGRES_USER: edgetape
+      POSTGRES_PASSWORD: edgetape
+      POSTGRES_DB: edgetape
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edgetape -d edgetape"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: edgetape-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: edgetape-api
+    env_file: .env
+    environment:
+      - EDGETAPE_ROLE=api
+      - EDGETAPE_CELERY_BROKER=redis://redis:6379/0
+      - EDGETAPE_STORAGE=/data/storage
+      - EDGETAPE_DATABASE_URL=postgresql+psycopg2://edgetape:edgetape@db:5432/edgetape
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/storage:/data/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: edgetape-worker
+    command: ["/entrypoint.sh"]
+    env_file: .env
+    environment:
+      - EDGETAPE_ROLE=worker
+      - EDGETAPE_CELERY_BROKER=redis://redis:6379/0
+      - EDGETAPE_STORAGE=/data/storage
+      - EDGETAPE_DATABASE_URL=postgresql+psycopg2://edgetape:edgetape@db:5432/edgetape
+    volumes:
+      - ./backend/storage:/data/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  autopilot:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: edgetape-autopilot
+    command: ["python", "-m", "app.autopilot"]
+    env_file: .env
+    environment:
+      - EDGETAPE_ASYNC_BACKEND=celery
+      - EDGETAPE_CELERY_BROKER=redis://redis:6379/0
+      - EDGETAPE_STORAGE=/data/storage
+      - EDGETAPE_DATABASE_URL=postgresql+psycopg2://edgetape:edgetape@db:5432/edgetape
+    volumes:
+      - ./backend/storage:/data/storage
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,24 @@
+__pycache__/
+*.pyc
+backend/storage/
+backend/.venv/
+.venv/
+web/node_modules/
+web/dist/
+*.mp4
+*.mov
+*.wav
+*.mp3
+
+# ...pero las pistas de música de fondo del generador sí se versionan
+!backend/assets/music/*.mp3
+!backend/assets/music/*.m4a
+!backend/assets/music/*.wav
+!backend/assets/music/*.ogg
+
+# secretos y local
+.env
+AGENTS.md
+*.log
+backend/server.log
+deliverables/

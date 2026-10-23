@@ -1,0 +1,15 @@
+.git
+.env
+**/__pycache__
+**/*.pyc
+backend/storage
+backend/.venv
+web/node_modules
+web/dist
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.log
+# ...pero las pistas de música de fondo sí viajan a la imagen
+!backend/assets/music/**
